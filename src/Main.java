@@ -9,50 +9,47 @@ public class Main {
     public static void main(String[] args) {
         ArrayList<Node> nodes = nodesFromFile();
         Node rootNode = buildHuffmanTree(nodes);
-        String text = getFileText();
+        String text = getFileText(textFilename);
 
         System.out.println("Oryginalny tekst: "+text);
         printAllCodes(rootNode,"");
 
-        ArrayList<String> allCodes = getTextCodes(rootNode,text);
-        writeCodeToFile(allCodes);
-
-        System.out.println("Zakodowany tekst: " + allCodes.get(0));
-        System.out.println("Odkodowany tekst: " + decodeText(rootNode,readCodeFromFile()));
+        String code = getTextCodes(rootNode,text);
+        writeCodeToFile(code);
+        System.out.println("Zakodowany tekst: " + code);
+        System.out.println("Odkodowany tekst: " + decodeText(rootNode,getFileText(codeFileName)));
     }
 
-    public static String decodeText(Node root,ArrayList<String> codes){
-        // Dla każdego kodu dodaje jego odkodowany znak do string-a, otrzymując odkodowany string
+    public static String decodeText(Node root,String code){
+        // Odkodowuje tekst przechodząc po drzewie Huffmana.
         StringBuilder decodedText = new StringBuilder();
-
-        for (int i = 1; i < codes.size(); i++) {
-            decodedText.append(decodeChar(root,codes.get(i)));
+        Node node = root;
+        for (Character ch: code.toCharArray()) {
+            //Jeśli 1 to w prawo, jeśli 0 to w lewo
+            if (ch == '1') node = node.right;
+            else node = node.left;
+            // Jeżeli węzeł nie ma dzieci to jest liściem, czyli zawiera znak.
+            // Zwracam znak i wracam do korzenia aby zacząć szukanie nowego znaku.
+            if (node.right == null && node.left == null) {
+                decodedText.append(node.symbol);
+                node = root;
+            }
         }
+
         return decodedText.toString();
     }
 
-    public static Character decodeChar(Node node, String code) {
-        //Szukam znaku odpowiadającego kodowi przechodząc odpowiednio w lewo lub w prawo po drzewie.
-        for(Character ch: code.toCharArray()) {
-            if (ch == '1') node = node.right;
-            else node = node.left;
-        }
-        return node.symbol;
-    }
-    public static ArrayList<String> getTextCodes(Node root, String text) {
+
+    public static String getTextCodes(Node root, String text) {
         // Dla każdego znaku string-a szukam jego kodu i dodaje do całkowitego kodu
-        ArrayList<String> codes = new ArrayList<>();
-        StringBuilder totalCode = new StringBuilder();
+        StringBuilder string = new StringBuilder();
         for (Character ch:text.toCharArray()) {
             // Dla każdego znaku w stringu znajdź jego kod
-            codes.add(getCode(root,ch,""));
+            string.append(getCode(root,ch,""));
         }
-        for(String str:codes) {
-            totalCode.append(str);
-        }
+
         // Pierwszym elementem tablicy kodów będzie całkowity kod (do czystszego wyświetlania bez pętli)
-        codes.add(0,totalCode.toString());
-        return codes;
+        return string.toString();
     }
 
     public static Node buildHuffmanTree(ArrayList<Node> nodes) {
@@ -142,10 +139,10 @@ public class Main {
         return nodes;
     }
 
-    public static String getFileText() {
+    public static String getFileText(String filename) {
         // Po prostu odczytuję i zwracam tekst z pliku.
         StringBuilder stringBuilder = new StringBuilder();
-        try (BufferedReader reader = new BufferedReader(new FileReader(textFilename)))
+        try (BufferedReader reader = new BufferedReader(new FileReader(filename)))
         {
             String line;
             while((line = reader.readLine())!=null)
@@ -158,34 +155,15 @@ public class Main {
         return stringBuilder.toString();
     }
 
-    public static void writeCodeToFile(ArrayList<String> tekst) {
+    public static void writeCodeToFile(String tekst) {
         // Zapisuje kod do pliku.
         try (BufferedWriter writer = new BufferedWriter(new FileWriter(codeFileName))) {
-            for (String str : tekst) {
-                writer.write(str);
-                writer.newLine();
-            }
+            writer.write(tekst);
+
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
-
-    public static ArrayList<String> readCodeFromFile() {
-        // Odczytuje kod z pliku
-        ArrayList<String> tekst = new ArrayList<>();
-        try (BufferedReader reader = new BufferedReader(new FileReader(codeFileName)))
-        {
-            String line;
-            while((line = reader.readLine())!=null)
-            {
-                tekst.add(line);
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        return tekst;
-    }
-
 
 }
 
