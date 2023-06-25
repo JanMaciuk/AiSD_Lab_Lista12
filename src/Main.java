@@ -1,21 +1,24 @@
-import java.io.BufferedReader;
-import java.io.FileReader;
-import java.io.IOException;
+import java.io.*;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.PriorityQueue;
 
 public class Main {
-    private static final String filename = "tekst.txt";
+    private static final String textFilename = "tekst.txt";
+    private static final String codeFileName = "kod.txt";
     public static void main(String[] args) {
         ArrayList<Node> nodes = nodesFromFile();
         Node rootNode = buildHuffmanTree(nodes);
         String text = getFileText();
+
         System.out.println("Oryginalny tekst: "+text);
         printAllCodes(rootNode,"");
+
         ArrayList<String> allCodes = getTextCodes(rootNode,text);
+        writeCodeToFile(allCodes);
+
         System.out.println("Zakodowany tekst: " + allCodes.get(0));
-        System.out.println("Odkodowany tekst: " + decodeText(rootNode,allCodes));
+        System.out.println("Odkodowany tekst: " + decodeText(rootNode,readCodeFromFile()));
     }
 
     public static String decodeText(Node root,ArrayList<String> codes){
@@ -121,7 +124,7 @@ public class Main {
     public static ArrayList<Node> nodesFromFile() {
         // Odczytuje plik o podanej nazwie linia po linii, zwraca listę unikalnych węzłów zawierających wszystkie znaki.
         ArrayList<Node> nodes = new ArrayList<>();
-        try(BufferedReader reader = new BufferedReader(new FileReader(filename))) {
+        try(BufferedReader reader = new BufferedReader(new FileReader(textFilename))) {
             String line;
             while ((line = reader.readLine()) != null) {
                 for (Character ch:line.toCharArray()) {
@@ -142,7 +145,7 @@ public class Main {
     public static String getFileText() {
         // Po prostu odczytuję i zwracam tekst z pliku.
         StringBuilder stringBuilder = new StringBuilder();
-        try (BufferedReader reader = new BufferedReader(new FileReader(filename)))
+        try (BufferedReader reader = new BufferedReader(new FileReader(textFilename)))
         {
             String line;
             while((line = reader.readLine())!=null)
@@ -154,7 +157,38 @@ public class Main {
         }
         return stringBuilder.toString();
     }
+
+    public static void writeCodeToFile(ArrayList<String> tekst) {
+        // Zapisuje kod do pliku.
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter(codeFileName))) {
+            for (String str : tekst) {
+                writer.write(str);
+                writer.newLine();
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public static ArrayList<String> readCodeFromFile() {
+        // Odczytuje kod z pliku
+        ArrayList<String> tekst = new ArrayList<>();
+        try (BufferedReader reader = new BufferedReader(new FileReader(codeFileName)))
+        {
+            String line;
+            while((line = reader.readLine())!=null)
+            {
+                tekst.add(line);
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return tekst;
+    }
+
+
 }
+
 class nodeFrequencyComparator implements Comparator<Node>{
     public int compare(Node arg0, Node arg1){
         if(arg0.symbol != null){
